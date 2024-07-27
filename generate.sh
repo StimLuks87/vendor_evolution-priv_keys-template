@@ -78,6 +78,19 @@ apex_certificates=(
     com.qorvo.uwb
 )
 
+check_dir() {
+    if [[ -z "$ANDROID_BUILD_TOP" ]]; then
+        echo "ANDROID_BUILD_TOP is not set. Please run '. build/envsetup.sh' from the root of the source tree before running this script."
+        exit 1
+    fi
+
+    if [[ "$(pwd)" != "${ANDROID_BUILD_TOP}/vendor/evolution-priv/keys" ]]; then
+        echo "This must be run from ${ANDROID_BUILD_TOP}/vendor/evolution-priv/keys"
+        echo "Current directory is $(pwd)."
+        exit 1
+    fi
+}
+
 confirm() {
     while true; do
         read -r -p "$1 (yes/no): " input
@@ -132,7 +145,7 @@ user_input() {
 
         if [[ $(confirm "Is this information correct?") != "yes" ]]; then
             echo "Generation aborted."
-            exit 0
+            exit 1
         fi
     else
         key_size='2048'
@@ -174,7 +187,7 @@ generate_certificates() {
 
     if ! $generated; then
         echo "No new keys were generated. Exiting..."
-        return
+        exit 0
     fi
 
     create_symlinks
@@ -221,4 +234,5 @@ generate_keys_mk() {
     echo "PRODUCT_EXTRA_RECOVERY_KEYS :=" >> keys.mk
 }
 
+check_dir
 user_input
