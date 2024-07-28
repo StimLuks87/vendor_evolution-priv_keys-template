@@ -6,87 +6,53 @@
 
 #!/bin/bash
 
-certificates=(
-    bluetooth
-    cts_uicc_2021
-    cyngn-app
-    media
-    networkstack
-    nfc
-    platform
-    sdk_sandbox
-    shared
-    testcert
-    testkey
-    verity
-)
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
+RED='\033[0;31m'
+ENDCOLOR='\033[0m'
 
-apex_certificates=(
-    com.android.adbd
-    com.android.adservices.api
-    com.android.adservices
-    com.android.appsearch
-    com.android.art
-    com.android.bluetooth
-    com.android.btservices
-    com.android.cellbroadcast
-    com.android.compos
-    com.android.configinfrastructure
-    com.android.connectivity.resources
-    com.android.conscrypt
-    com.android.devicelock
-    com.android.extservices
-    com.android.graphics.pdf
-    com.android.hardware.biometrics.face.virtual
-    com.android.hardware.biometrics.fingerprint.virtual
-    com.android.hardware.boot
-    com.android.hardware.cas
-    com.android.hardware.wifi
-    com.android.healthfitness
-    com.android.hotspot2.osulogin
-    com.android.i18n
-    com.android.ipsec
-    com.android.media
-    com.android.mediaprovider
-    com.android.media.swcodec
-    com.android.nearby.halfsheet
-    com.android.networkstack.tethering
-    com.android.neuralnetworks
-    com.android.ondevicepersonalization
-    com.android.os.statsd
-    com.android.permission
-    com.android.resolv
-    com.android.rkpd
-    com.android.runtime
-    com.android.safetycenter.resources
-    com.android.scheduling
-    com.android.sdkext
-    com.android.support.apexer
-    com.android.telephony
-    com.android.telephonymodules
-    com.android.tethering
-    com.android.tzdata
-    com.android.uwb
-    com.android.uwb.resources
-    com.android.virt
-    com.android.vndk.current
-    com.android.wifi
-    com.android.wifi.dialog
-    com.android.wifi.resources
-    com.google.pixel.camera.hal
-    com.google.pixel.vibrator.hal
-    com.qorvo.uwb
-)
+display_header() {
+    echo -e "${GREEN}===========================================================${ENDCOLOR}"
+    echo -e "${BLUE}      ______            __      __  _                _  __  ${ENDCOLOR}"
+    echo -e "${BLUE}     / ____/   ______  / /_  __/ /_(_)___  ____     | |/ /  ${ENDCOLOR}"
+    echo -e "${BLUE}    / __/ | | / / __ \/ / / / / __/ / __ \/ __ \    |   /   ${ENDCOLOR}"
+    echo -e "${BLUE}   / /___ | |/ / /_/ / / /_/ / /_/ / /_/ / / / /   /   |    ${ENDCOLOR}"
+    echo -e "${BLUE}  /_____/ |___/\____/_/\__,_/\__/_/\____/_/ /_/   /_/|_|    ${ENDCOLOR}"
+    echo -e "${BLUE}                                                            ${ENDCOLOR}"
+    echo -e "${BLUE}                    Private key generator                   ${ENDCOLOR}"
+    echo -e "${BLUE}                                                            ${ENDCOLOR}"
+    echo -e "${BLUE}                        #KeepEvolving                       ${ENDCOLOR}"
+    echo -e "${GREEN}===========================================================${ENDCOLOR}"
+}
 
 check_dir() {
     if [[ -z "$ANDROID_BUILD_TOP" ]]; then
-        echo "ANDROID_BUILD_TOP is not set. Please run '. build/envsetup.sh' from the root of the source tree before running this script."
+        echo -e "${RED}ANDROID_BUILD_TOP is not set. Please run '. build/envsetup.sh' from the root of the source tree before running this script.${ENDCOLOR}"
         exit 1
     fi
 
     if [[ "$(pwd)" != "${ANDROID_BUILD_TOP}/vendor/evolution-priv/keys" ]]; then
-        echo "This must be run from ${ANDROID_BUILD_TOP}/vendor/evolution-priv/keys"
-        echo "Current directory is $(pwd)."
+        echo -e "${RED}This must be run from ${ANDROID_BUILD_TOP}/vendor/evolution-priv/keys!${ENDCOLOR}"
+        echo -e "${RED}Current directory is $(pwd)!${ENDCOLOR}"
+        exit 1
+    fi
+}
+
+get_target_certificates() {
+    local cert_file="certificates.txt"
+    local apex_cert_file="apex_certificates.txt"
+
+    if [[ -f "$cert_file" ]]; then
+        mapfile -t certificates < "$cert_file"
+    else
+        echo -e "${RED}$cert_file not found!${ENDCOLOR}"
+        exit 1
+    fi
+
+    if [[ -f "$apex_cert_file" ]]; then
+        mapfile -t apex_certificates < "$apex_cert_file"
+    else
+        echo -e "${RED}$apex_cert_file not found!${ENDCOLOR}"
         exit 1
     fi
 }
@@ -133,7 +99,7 @@ user_input() {
         cn=$(prompt "Enter the common name (e.g., Android): ")
         email=$(prompt "Enter the email address (e.g., android@android.com): ")
 
-        echo "Subject information to be used:"
+        echo -e "${BLUE}Subject information to be used:${ENDCOLOR}"
         echo "Key Size: $key_size"
         echo "Country Code: $country_code"
         echo "State/Province: $state"
@@ -144,7 +110,7 @@ user_input() {
         echo "Email Address: $email"
 
         if [[ $(confirm "Is this information correct?") != "yes" ]]; then
-            echo "Generation aborted."
+            echo -e "${RED}Generation aborted!${ENDCOLOR}"
             exit 1
         fi
     else
@@ -159,12 +125,10 @@ user_input() {
     fi
 
     subject="/C=$country_code/ST=$state/L=$city/O=$org/OU=$ou/CN=$cn/emailAddress=$email"
-
-    generate_certificates
 }
 
 generate_certificates() {
-    echo "Generating certificates..."
+    echo -e "${BLUE}Generating certificates...${ENDCOLOR}"
     local generated=false
 
     for certificate in "${certificates[@]}" "${apex_certificates[@]}"; do
@@ -186,17 +150,13 @@ generate_certificates() {
     done
 
     if ! $generated; then
-        echo "No new keys were generated. Exiting..."
+        echo -e "${GREEN}No new keys were generated. Exiting...${ENDCOLOR}"
         exit 0
     fi
-
-    create_symlinks
-    generate_android_bp
-    generate_keys_mk
 }
 
 create_symlinks() {
-    echo "Creating system links..."
+    echo -e "${BLUE}Creating system links...${ENDCOLOR}"
     rm -f BUILD.bazel releasekey.pk8 releasekey.x509.pem
     ln -sf ../../../build/make/target/product/security/BUILD.bazel BUILD.bazel
     ln -sf testkey.pk8 releasekey.pk8
@@ -204,7 +164,7 @@ create_symlinks() {
 }
 
 generate_android_bp() {
-    echo "Generating Android.bp..."
+    echo -e "${BLUE}Generating Android.bp...${ENDCOLOR}"
     rm -f Android.bp
     for apex_certificate in "${apex_certificates[@]}"; do
         echo "android_app_certificate {" >> Android.bp
@@ -218,7 +178,7 @@ generate_android_bp() {
 }
 
 generate_keys_mk() {
-    echo "Generating keys.mk..."
+    echo -e "${BLUE}Generating keys.mk...${ENDCOLOR}"
     rm -f keys.mk
     echo "PRODUCT_CERTIFICATE_OVERRIDES := \\" > keys.mk
     for apex_certificate in "${apex_certificates[@]}"; do
@@ -234,5 +194,11 @@ generate_keys_mk() {
     echo "PRODUCT_EXTRA_RECOVERY_KEYS :=" >> keys.mk
 }
 
+display_header
 check_dir
+get_target_certificates
 user_input
+generate_certificates
+create_symlinks
+generate_android_bp
+generate_keys_mk
