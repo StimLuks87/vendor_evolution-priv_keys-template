@@ -170,7 +170,7 @@ generate_certificates() {
     for certificate in "${certificates[@]}" "${apex_certificates[@]}"; do
         if [[ (-f "${certificate}.x509.pem" && -f "${certificate}.pk8") ||
               (-f "${certificate}.certificate.override.x509.pem" && -f "${certificate}.certificate.override.pk8") ]]; then
-            echo "$certificate already exists. Skipping..."
+            continue
         else
             generated=true
             if [[ " ${certificates[*]} " == *" $certificate "* ]]; then
