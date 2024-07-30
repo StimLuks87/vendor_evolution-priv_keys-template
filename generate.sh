@@ -31,8 +31,8 @@ check_dir() {
         exit 1
     fi
 
-    if [[ "$(pwd)" != "${ANDROID_BUILD_TOP}/vendor/evolution-priv/keys" ]]; then
-        echo -e "${RED}This must be run from ${ANDROID_BUILD_TOP}/vendor/evolution-priv/keys!${ENDCOLOR}"
+    if [[ "$(pwd)" != "${ANDROID_BUILD_TOP}/vendor/lineage-priv/keys" ]]; then
+        echo -e "${RED}This must be run from ${ANDROID_BUILD_TOP}/vendor/lineage-priv/keys!${ENDCOLOR}"
         echo -e "${RED}Current directory is $(pwd)!${ENDCOLOR}"
         exit 1
     fi
