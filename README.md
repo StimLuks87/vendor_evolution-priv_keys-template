@@ -1,9 +1,9 @@
-# evolution-priv_keys-template
+# infinity-priv_keys-template
 
 # Usage
 
 ```bash
-croot && git clone https://github.com/Infinity-X/vendor_infinity-priv_keys-template vendor/infinity-priv/keys
+croot && git clone https://github.com/StimLuks87/vendor_infinity-priv_keys-template.git vendor/infinity-priv/keys
 ```
 
 ```bash
